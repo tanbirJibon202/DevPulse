@@ -8,14 +8,14 @@ const auth = (...roles: ROLES[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+
+      if (!authHeader) {
         return res.status(401).json({
           success: false,
           message: "Unauthorized",
         });
       }
-
-      const token = authHeader.split(" ")[1] as string;
+      const token = authHeader;
 
       const decoded = jwt.verify(token, config.secret as string) as JwtPayload;
 

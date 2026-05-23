@@ -35,6 +35,7 @@ const createIssue = async (req: Request, res: Response) => {
 const getAllIssues = async (req: Request, res: Response) => {
   try {
     const result = await issueService.getAllIssuesFromDB(req.query);
+
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -43,6 +44,14 @@ const getAllIssues = async (req: Request, res: Response) => {
     });
   } catch (error: unknown) {
     const err = error as { message?: string };
+
+    if (err.message?.startsWith("Invalid")) {
+      return res.status(400).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: err.message || "Internal Server Error",

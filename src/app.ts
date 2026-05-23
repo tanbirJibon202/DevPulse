@@ -16,11 +16,7 @@ app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
 
-const corsOptions = {
-  origin: "http://localhost:3000",
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
@@ -28,10 +24,8 @@ app.get("/", (req: Request, res: Response) => {
     author: "DevPulse",
   });
 });
-
 app.use("/api/auth", authRoute);
 app.use("/api/issues", issueRoute);
-
 app.use(globalErrorHandler);
 
 export default app;

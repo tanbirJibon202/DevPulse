@@ -25,6 +25,22 @@ const createIssueIntoDB = async (
 const getAllIssuesFromDB = async (query: IGetIssuesQuery) => {
   const { sort = "newest", type, status } = query;
 
+  const allowedSort = ["newest", "oldest"];
+  const allowedType = ["bug", "feature_request"];
+  const allowedStatus = ["open", "in_progress", "resolved"];
+
+  if (sort && !allowedSort.includes(sort)) {
+    throw new Error("Invalid sort query value");
+  }
+
+  if (type && !allowedType.includes(type)) {
+    throw new Error("Invalid type query value");
+  }
+
+  if (status && !allowedStatus.includes(status)) {
+    throw new Error("Invalid status query value");
+  }
+
   const conditions: string[] = [];
   const values: string[] = [];
 
@@ -126,8 +142,7 @@ const updateIssueIntoDB = async (
   userId: number,
   userRole: string,
 ) => {
-  const { title, description, type } = payload;
-
+  const { title, description, type, status } = payload;
   const issueResult = await pool.query(
     `
     SELECT id, title, description, type, status, reporter_id, created_at, updated_at
@@ -166,20 +181,30 @@ const updateIssueIntoDB = async (
         data: null,
       };
     }
+
+    if (status) {
+      return {
+        statusCode: 403,
+        success: false,
+        message: "Forbidden! Contributors cannot update issue status",
+        data: null,
+      };
+    }
   }
 
   const updatedResult = await pool.query(
     `
-    UPDATE issues
-    SET
-      title = COALESCE($1, title),
-      description = COALESCE($2, description),
-      type = COALESCE($3, type),
-      updated_at = NOW()
-    WHERE id = $4
-    RETURNING id, title, description, type, status, reporter_id, created_at, updated_at
-    `,
-    [title, description, type, id],
+  UPDATE issues
+  SET
+    title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    type = COALESCE($3, type),
+    status = COALESCE($4, status),
+    updated_at = NOW()
+  WHERE id = $5
+  RETURNING id, title, description, type, status, reporter_id, created_at, updated_at
+  `,
+    [title, description, type, status, id],
   );
 
   return {
